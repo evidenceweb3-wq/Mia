@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MIA on PUMP</title>
+  <style>
+    :root{
+      --bg1:#ff8ecf; --bg2:#ff69b4; --bg3:#ffb6c1;
+      --card:#ffffff20; --accent:#fff200; --muted:#f8e9f8;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+      background:linear-gradient(180deg,var(--bg1),var(--bg2),var(--bg3));
+      color:#fff;font-family:Inter,system-ui,Arial,sans-serif;padding:24px;overflow:hidden;
+    }
+    header{max-width:900px;width:100%;text-align:center;margin-bottom:18px;position:relative;z-index:2}
+    h1{margin:0;font-size:clamp(24px,4vw,40px);letter-spacing:1px;text-shadow:0 0 6px #ff3}
+    .subtitle{color:#fff;margin-top:6px;font-size:16px}
+
+    .card{
+      background:var(--card);backdrop-filter:blur(6px);
+      padding:28px;border-radius:18px;
+      width:100%;max-width:900px;
+      position:relative;z-index:2;
+      display:flex;flex-direction:column;align-items:center;
+    }
+
+    .carousel-wrap{
+      display:flex;align-items:center;justify-content:center;
+      gap:12px;width:100%;max-width:100%;
+    }
+    .arrow{
+      background:rgba(255,255,255,0.15);border:none;
+      width:44px;height:44px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;user-select:none;color:#fff;font-size:20px;
+      flex-shrink:0;
+      transition:transform 0.25s ease;
+    }
+    .arrow:hover{transform:scale(1.15)}
+    .arrow:active{transform:translateY(1px)}
+
+    .viewport{
+      flex:1;display:flex;justify-content:center;
+      max-width:100%;overflow:hidden;
+    }
+    .circles{
+      display:flex;gap:16px;align-items:center;justify-content:center;
+      flex-wrap:nowrap;max-width:100%;
+    }
+    .circle{
+      width:clamp(100px,22vw,160px);
+      height:clamp(100px,22vw,160px);
+      border-radius:20px; /* rounded square */
+      overflow:hidden;display:flex;align-items:center;justify-content:center;
+      background:#fff2;border:2px solid #fff6;
+      box-shadow:0 0 10px rgba(255,255,255,0.5);
+      transition:transform 0.35s ease, box-shadow 0.35s ease;
+      cursor:pointer;flex-shrink:0;
+    }
+    .circle img{width:100%;height:100%;object-fit:cover;display:block}
+    .circle:hover{
+      transform:scale(1.12);
+      box-shadow:0 0 20px rgba(255,255,255,0.9);
+      z-index:10;
+    }
+
+    .desc{margin-top:16px;color:#fff;text-align:center;font-size:17px}
+
+    .links{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;display:flex;gap:12px;align-items:center;z-index:2}
+    .links a{display:inline-block;width:44px;height:44px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;transition:transform 0.25s ease}
+    .links a:hover{transform:scale(1.15)}
+    .links img{width:28px;height:28px;object-fit:contain}
+
+    .contract{margin-top:20px;text-align:center;font-size:15px;color:#fff;font-weight:bold}
+
+    /* particles */
+    canvas#particles{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;}
+
+    @media (max-width:520px){
+      .circle{width:90px;height:90px}
+      .arrow{width:36px;height:36px}
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+  <header>
+    <h1>🐶🐾 MIA on PUMP 🐾🐶</h1>
+    <div class="subtitle">Livestreaming...</div>
+  </header>
+
+  <main class="card">
+    <div class="carousel-wrap" role="region" aria-label="Mia image carousel">
+      <button class="arrow" id="prev" aria-label="Previous images">◀</button>
+      <div class="viewport">
+        <div class="circles" id="circles"></div>
+      </div>
+      <button class="arrow" id="next" aria-label="Next images">▶</button>
+    </div>
+
+    <p class="desc">🐕 Mia my dog, full of pump energy! 🐕</p>
+    <div class="contract">CA: <span id="contract">(add later)</span></div>
+  </main>
+
+  <div class="links">
+    <a href="https://i.postimg.cc/3xfhC7Ft/WICON.png" target="_blank" title="Web link icon">
+      <img src="https://i.postimg.cc/3xfhC7Ft/WICON.png" alt="Web icon" />
+    </a>
+    <a href="https://i.postimg.cc/jSSK7CPW/XICON.png" target="_blank" title="X link icon">
+      <img src="https://i.postimg.cc/jSSK7CPW/XICON.png" alt="X icon" />
+    </a>
+  </div>
+
+  <script>
+    const images = [
+      'https://i.postimg.cc/w38hHRLL/20250520-144512.jpg',
+      'https://i.postimg.cc/3W5g70mk/20250524-143303.jpg',
+      'https://i.postimg.cc/xdxpQgCJ/20250617-144318.jpg',
+    ];
+    const VISIBLE = 3;
+    let start = 0;
+    const circlesEl = document.getElementById('circles');
+
+    function render() {
+      circlesEl.innerHTML = '';
+      const n = images.length || VISIBLE;
+      for (let i = 0; i < VISIBLE; i++) {
+        const idx = (start + i) % Math.max(n, VISIBLE);
+        const wrap = document.createElement('div');
+        wrap.className = 'circle';
+        const img = document.createElement('img');
+        img.alt = `Mia image ${idx+1}`;
+        img.src = images[idx] || '';
+        wrap.appendChild(img);
+        circlesEl.appendChild(wrap);
+      }
+    }
+    function prev(){start=(start-VISIBLE+images.length)%images.length;render();}
+    function next(){start=(start+VISIBLE)%images.length;render();}
+    document.getElementById('prev').addEventListener('click', prev);
+    document.getElementById('next').addEventListener('click', next);
+    window.addEventListener('keydown', (e)=>{if(e.key==='ArrowLeft') prev();if(e.key==='ArrowRight') next();});
+    render();
+
+    // Particle animation
+    const canvas=document.getElementById('particles');
+    const ctx=canvas.getContext('2d');
+    let w,h;function resize(){w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight;}resize();window.addEventListener('resize',resize);
+    const particles=[];for(let i=0;i<50;i++){particles.push({x:Math.random()*w,y:Math.random()*h,dx:(Math.random()-0.5)*1,dy:(Math.random()-0.5)*1,r:Math.random()*3+2});}
+    function draw(){ctx.clearRect(0,0,w,h);ctx.fillStyle='rgba(255,255,255,0.8)';particles.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();p.x+=p.dx;p.y+=p.dy;if(p.x<0||p.x>w) p.dx*=-1;if(p.y<0||p.y>h) p.dy*=-1;});requestAnimationFrame(draw);}draw();
+  </script>
+</body>
+</html>
